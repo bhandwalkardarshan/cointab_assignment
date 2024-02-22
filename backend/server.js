@@ -5,7 +5,7 @@ const userRoutes = require('./routes/userRoutes');
 
 app.use(express.json());
 // Define a whitelist array of allowed origins
-const whitelist = ['http://localhost:5173'];
+const whitelist = ['http://localhost:5173','https://cointab-assignment-ivory.vercel.app'];
 
 // Configure CORS to dynamically set the allowed origin
 app.use(cors({
