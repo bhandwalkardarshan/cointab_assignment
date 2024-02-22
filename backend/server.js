@@ -4,13 +4,14 @@ const app = express();
 const userRoutes = require('./routes/userRoutes');
 
 app.use(express.json());
+// Define a whitelist array of allowed origins
+const whitelist = ['http://localhost:5173'];
+
+// Configure CORS to dynamically set the allowed origin
 app.use(cors({
     origin: function (origin, callback) {
-        // Define an array of allowed origins
-        const allowedOrigins = ['http://localhost:5173', 'http://example2.com'];
-
-        // Check if the incoming origin is in the array of allowed origins
-        if (!origin || allowedOrigins.includes(origin)) {
+        // Check if the incoming origin is in the whitelist
+        if (!origin || whitelist.includes(origin)) {
             // Allow the request
             callback(null, true);
         } else {
@@ -19,6 +20,7 @@ app.use(cors({
         }
     }
 }));
+
 
 app.use('/', userRoutes);
 

@@ -118,7 +118,7 @@ async function downloadUserData(req, res) {
         }
 
         const xls = json2xls(posts);
-        const dirPath = path.join(__dirname, 'downloads');
+        const dirPath = path.join(__dirname, '../downloads');
         const filePath = path.join(dirPath, 'exported.xlsx');
 
         // Check if directory exists and create it if it doesn't
@@ -128,6 +128,7 @@ async function downloadUserData(req, res) {
 
         fs.writeFileSync(filePath, xls, 'binary');
         
+        // res.setHeader('Access-Control-Allow-Origin', 'http://localhost:5173');
         // Set headers for file download
         res.setHeader('Content-Disposition', 'attachment; filename=exported.xlsx');
         res.setHeader('Content-Type', 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet');
