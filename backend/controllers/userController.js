@@ -43,6 +43,27 @@ async function getSingleUser(req, res) {
     }
 }
 
+async function getAllPostsOfUser(req, res) {
+    try {
+        const { id } = req.params;
+        const { data, error } = await supabase
+            .from('posts')
+            .select('*')
+            .eq('userId', id);
+
+        if (error) {
+            throw error;
+        }
+
+        if (!data) {
+            return res.status(404).json({ error: 'User not found' });
+        }
+
+        res.json(data);
+    } catch (error) {
+        res.status(500).json({ error: 'Unable to fetch posts from the database.' });
+    }
+}
 async function createUser(req, res) {
     try {
         const { error } = await supabase
@@ -143,6 +164,7 @@ async function downloadUserData(req, res) {
 module.exports = {
     getAllUsers,
     getSingleUser,
+    getAllPostsOfUser,
     createUser,
     addBulkUsers,
     addBulkPosts,
