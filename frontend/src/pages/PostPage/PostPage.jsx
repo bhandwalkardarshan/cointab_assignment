@@ -2,6 +2,8 @@ import React, { useState, useEffect } from 'react';
 import axios from 'axios';
 import { useParams } from 'react-router-dom';
 import '../../components/styles.css'
+import * as XLSX from 'xlsx';
+
 
 const PostPage = () => {
   const { id } = useParams();
@@ -9,7 +11,8 @@ const PostPage = () => {
   const [user, setUser] = useState(null);
   const [posts, setPosts] = useState([]);
   const [showDownloadInExcel, setshowDownloadInExcel] = useState(false); 
-  const baseURL = 'http://localhost:3031';
+  const [showBulkAdd, setShowBulkAdd] = useState(true)
+  const baseURL = 'https://sleepy-sari-duck.cyclic.app';
 
   useEffect(() => {
     // Fetch user data
@@ -29,10 +32,24 @@ const PostPage = () => {
       .catch(error => {
         console.error('Error fetching posts:', error);
       });
+
+      // Fetch posts for the specific userId from database
+    axios.get(`${baseURL}/user/posts/${id}`)
+    .then(response => {
+      if(response.data.length > 0){
+        setShowBulkAdd(false)
+        setshowDownloadInExcel(true)
+        
+      }
+    })
+    .catch(error => {
+      console.error('Error fetching posts:', error);
+    });
   }, [id]);
 
   const handleBulkAddClick = async () => {
     setshowDownloadInExcel(true)
+    setShowBulkAdd(false)
     // Implement your logic for bulk adding posts here
     const response = await axios.post(`${baseURL}/bulk/posts`, posts );
     // console.log(response)
@@ -43,53 +60,73 @@ const PostPage = () => {
   const handleDownloadExcelClick = async () => {
     // Logic for Download In Excel button click
     console.log('Download In Excel clicked');
-    try {
-        const response = await axios.post(`${baseURL}/download`, posts, {
-            responseType: 'blob' // Treat response as a blob (binary data)
-        });
+    // Assuming jsonData is your JSON data
+    const jsonData = posts
+    // Convert JSON to worksheet
+    const worksheet = XLSX.utils.json_to_sheet(jsonData);
 
-        // Create a blob object from the response data
-        const blob = new Blob([response.data], { type: 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet' });
+    // Create workbook
+    const workbook = XLSX.utils.book_new();
+    XLSX.utils.book_append_sheet(workbook, worksheet, "Sheet1");
 
-        // Create a temporary anchor element to trigger the download
-        const url = window.URL.createObjectURL(blob);
-        const link = document.createElement('a');
-        link.href = url;
-        link.setAttribute('download', 'exported.xlsx'); // Set the filename for download
-        document.body.appendChild(link);
-        link.click();
+    // Convert workbook to Blob
+    const workbookBlob = new Blob([s2ab(XLSX.write(workbook, { type: 'binary' }))], { type: "application/octet-stream" });
 
-        // Cleanup
-        document.body.removeChild(link);
-        window.URL.revokeObjectURL(url);
-    } catch (error) {
-        console.error('Error downloading Excel file:', error);
-        // Handle error appropriately, e.g., show an error message to the user
+    // Function to convert string to ArrayBuffer
+    function s2ab(s) {
+        const buf = new ArrayBuffer(s.length);
+        const view = new Uint8Array(buf);
+        for (let i = 0; i < s.length; i++) view[i] = s.charCodeAt(i) & 0xff;
+        return buf;
     }
-    
+
+    // Create a URL for the Blob
+    const url = URL.createObjectURL(workbookBlob);
+
+    // Create a download link
+    const a = document.createElement('a');
+    a.href = url;
+    a.download = 'data.xlsx'; // Set the filename
+    a.style.display = 'none';
+
+    // Append the download link to the document body
+    document.body.appendChild(a);
+
+    // Click the download link to trigger the download
+    a.click();
+
+    // Remove the download link from the document body
+    document.body.removeChild(a);
+
+    // Revoke the URL to release the resources
+    URL.revokeObjectURL(url);
   };
 
   return (
-    <div className='postpagecontainer'>
+    <div className="postpagecontainer">
       {user && (
-        <div>
+        <div className="user-info">
           <h2>User Information:</h2>
-          <p>Name: {user.name}</p>
-          <p>Company: {user.company.name}</p>
+          <div>
+            <p><b>Name:</b> {user.name}</p>
+            <p><b>Company:</b> {user.company.name}</p>
+          </div>
         </div>
       )}
-         {/* Buttons section */}
-      <div style={{ marginBottom: '20px' }}>
-        <button onClick={handleBulkAddClick}>Bulk Add</button>
+      {/* Buttons section */}
+      <div className="buttons-container">
+        {showBulkAdd && (
+          <button onClick={handleBulkAddClick}>Bulk Add</button>
+        )}
         {showDownloadInExcel && (
-            <button onClick={handleDownloadExcelClick}>Download In Excel</button>
+          <button onClick={handleDownloadExcelClick}>Download In Excel</button>
         )}
       </div>
 
       <h2>Posts:</h2>
-      <div>
+      <div className="posts-container">
         {posts.map(post => (
-          <div key={post.id}>
+          <div key={post.id} className="post">
             <h3>{post.title}</h3>
             <p>{post.body}</p>
           </div>
