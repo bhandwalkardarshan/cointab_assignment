@@ -11,8 +11,7 @@ router.get('/users', userController.getAllUsers);
 router.get('/users/:id', userController.getSingleUser);
 router.get('/user/posts/:id', userController.getAllPostsOfUser)
 router.post('/users', userController.createUser);
-router.post('/bulk/users', userController.addBulkUsers);
 router.post('/bulk/posts', userController.addBulkPosts);
-router.post('/download', userController.downloadUserData);
+
 
 module.exports = router;
